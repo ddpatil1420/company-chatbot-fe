@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { sendMessage } from "../../services/chatService";
+import { sendMessage, initChatSession } from "../../services/chatService";
 import { useChatContext } from "../../context/ChatContext";
 
 function ChatWindow() {
@@ -7,6 +7,7 @@ function ChatWindow() {
     const [response, setResponse] = useState("");
     const [loading, setLoading] = useState(false);
     const [darkMode] = useState(true);
+    const [sessionId, setSessionId] = useState(null);
     const { addChat, activeChatId, chatHistory } = useChatContext();
     const activeChat = chatHistory.find((chat) => chat.id === activeChatId);
 
@@ -18,6 +19,7 @@ function ChatWindow() {
         if (!activeChatId) {
             setResponse("");
             setMessage("");
+            setSessionId(null);
         }
     }, [activeChatId]);
 
@@ -26,13 +28,35 @@ function ChatWindow() {
 
         if (!message.trim() || loading) return;
 
+        const isFirstMessage = !activeMessages || activeMessages.length === 0;
+
         try {
             setLoading(true);
 
-            const data = await sendMessage(message);
+            if (isFirstMessage) {
+                const data = await initChatSession("fullstack_developer");
 
-            setResponse(data.response);
-            addChat(message, data.response);
+                setSessionId(data.session_id);
+
+                addChat(message, data.question);
+                setResponse(data.question);
+            } else {
+                const data = await sendMessage(message, sessionId);
+
+                if (Array.isArray(data.response)) {
+                    const policyAnswer = data.response[0];
+                    const interviewQuestion = data.response[1];
+
+                    addChat(message, policyAnswer);
+                    if (interviewQuestion) {
+                        addChat(undefined, interviewQuestion);
+                    }
+                    setResponse(interviewQuestion);
+                } else {
+                    addChat(message, data.response);
+                    setResponse(data.response);
+                }
+            }
             setMessage("");
         } catch (error) {
             console.error("Chat Error:", error);
@@ -99,11 +123,10 @@ function ChatWindow() {
                             {activeMessages.map((msg, index) => (
                                 <div
                                     key={index}
-                                    className={`w-fit max-w-[85%] rounded-3xl px-5 py-4 whitespace-pre-wrap text-sm shadow-sm transition-all duration-200 ${
-                                        msg.role === "user"
-                                            ? "self-end bg-sky-500 text-white dark:bg-sky-400 dark:text-slate-900"
-                                            : "self-start bg-[#f4f4f4] dark:bg-[#2f2f2f] text-black dark:text-white"
-                                    }`}
+                                    className={`w-fit max-w-[85%] rounded-3xl px-5 py-4 whitespace-pre-wrap text-sm shadow-sm transition-all duration-200 ${msg.role === "user"
+                                        ? "self-end bg-sky-500 text-white dark:bg-sky-400 dark:text-slate-900"
+                                        : "self-start bg-[#f4f4f4] dark:bg-[#2f2f2f] text-black dark:text-white"
+                                        }`}
                                 >
                                     {msg.text}
                                 </div>

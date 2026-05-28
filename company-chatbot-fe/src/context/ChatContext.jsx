@@ -1,5 +1,3 @@
-// src/context/ChatContext.jsx
-
 import { createContext, useContext, useState } from "react";
 
 const ChatContext = createContext();
@@ -17,14 +15,19 @@ export const ChatProvider = ({ children }) => {
     };
 
     const addChat = (message, response) => {
+        const piecesToAdd = [];
+        if (message && message.trim() !== "") {
+            piecesToAdd.push({ role: "user", text: message });
+        }
+        if (response && response.trim() !== "") {
+            piecesToAdd.push({ role: "assistant", text: response });
+        }
+
         if (!chatHistory.length || !activeChatId) {
             const newChat = {
                 id: Date.now(),
-                title: message,
-                messages: [
-                    { role: "user", text: message },
-                    { role: "assistant", text: response },
-                ],
+                title: message || response,
+                messages: piecesToAdd,
                 lastMessage: response,
                 response,
                 createdAt: new Date(),
@@ -39,15 +42,14 @@ export const ChatProvider = ({ children }) => {
             prev.map((chat) =>
                 chat.id === activeChatId
                     ? {
-                          ...chat,
-                          messages: [
-                              ...chat.messages,
-                              { role: "user", text: message },
-                              { role: "assistant", text: response },
-                          ],
-                          lastMessage: response,
-                          response,
-                      }
+                        ...chat,
+                        messages: [
+                            ...chat.messages,
+                            ...piecesToAdd
+                        ],
+                        lastMessage: response,
+                        response,
+                    }
                     : chat
             )
         );

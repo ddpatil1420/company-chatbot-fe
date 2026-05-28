@@ -14,7 +14,7 @@ function Sidebar({ isSidebarOpen }) {
                 transition-all
                 duration-300
                 overflow-hidden
-                ${isSidebarOpen ? "w-64" : "w-0"}
+                ${isSidebarOpen ? "w-48" : "w-0"}
             `}
         >
             <div className="p-4">
@@ -23,11 +23,18 @@ function Sidebar({ isSidebarOpen }) {
                 <button
                     type="button"
                     onClick={createNewChat}
-                    className="w-full 
-                    bg-slate-200 hover:bg-slate-300 
-                    dark:bg-[#2f2f2f] dark:hover:bg-[#3a3a3a] 
-                    p-3 rounded-lg text-sm 
-                    text-slate-900 dark:text-white transition"
+                    className="w-full flex items-center justify-center gap-2
+                            bg-slate-200 hover:bg-slate-300
+                            dark:bg-[#2f2f2f] dark:hover:bg-[#3a3a3a]
+                            px-4 py-3
+                            rounded-xl
+                            text-sm font-medium
+                            text-slate-900 dark:text-white
+                            shadow-sm hover:shadow-md
+                            transition-all duration-200 ease-in-out
+                            active:scale-95
+                            focus:outline-none focus:ring-1 focus:ring-black/20 dark:focus:ring-white/20
+                            "
                 >
                     + New Chat
                 </button>

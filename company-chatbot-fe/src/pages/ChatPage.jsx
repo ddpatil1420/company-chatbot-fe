@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import ChatWindow from "../components/layout/ChatWindow";
+import QuestionPanel from "../components/layout/QuestionPanel"; // ✅ NEW
 import { useDispatch } from 'react-redux'
 import { loadTheme } from '../features/themeSlice'
 import { ChatProvider } from "../context/ChatContext";
@@ -25,6 +26,7 @@ function ChatPage() {
                 <div className="flex flex-1 overflow-hidden min-w-0">
                     <Sidebar isSidebarOpen={isSidebarOpen} />
                     <ChatWindow />
+                    <QuestionPanel />
                 </div>
             </div>
         </ChatProvider>
