@@ -18,14 +18,8 @@ export const sendMessage = async (message, sessionId) => {
 export const initChatSession = async (jdId) => {
     const response = await fetch(`http://127.0.0.1:8000/init?jd_id=${encodeURIComponent(jdId)}`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
     });
-
-    if (!response.ok) {
-        throw new Error("Failed to initialize session");
-    }
-
-    return await response.json();
+    if (!response.ok) throw new Error("Failed to initialize session");
+    return await response.json(); 
 };

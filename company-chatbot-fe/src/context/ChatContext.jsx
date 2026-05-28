@@ -5,13 +5,40 @@ const ChatContext = createContext();
 export const ChatProvider = ({ children }) => {
     const [chatHistory, setChatHistory] = useState([]);
     const [activeChatId, setActiveChatId] = useState(null);
+    const [panelQuestions, setPanelQuestions] = useState([]);
+    const [panelAnswers, setPanelAnswers] = useState({});
 
     const createNewChat = () => {
         setActiveChatId(null);
+        setPanelQuestions([]);
+        setPanelAnswers({});
     };
 
     const selectChat = (chatId) => {
         setActiveChatId(chatId);
+    };
+
+    const updatePanelAnswer = (questionText, answerText) => {
+        if (!questionText) return;
+
+        const cleanTarget = questionText.trim().toLowerCase().replace(/[?.]/g, "");
+
+        setPanelQuestions((prevQuestions) => {
+            const matchedQuestion = prevQuestions.find((q) => {
+                const cleanSource = q.question.trim().toLowerCase().replace(/[?.]/g, "");
+                return cleanSource === cleanTarget;
+            });
+
+            if (matchedQuestion) {
+                setPanelAnswers((prevAnswers) => ({
+                    ...prevAnswers,
+                    [matchedQuestion.id]: answerText,
+                }));
+            } else {
+                console.warn(`⚠️ No sidebar field match found for: "${questionText}"`);
+            }
+            return prevQuestions;
+        });
     };
 
     const addChat = (message, response) => {
@@ -43,10 +70,7 @@ export const ChatProvider = ({ children }) => {
                 chat.id === activeChatId
                     ? {
                         ...chat,
-                        messages: [
-                            ...chat.messages,
-                            ...piecesToAdd
-                        ],
+                        messages: [...chat.messages, ...piecesToAdd],
                         lastMessage: response,
                         response,
                     }
@@ -63,6 +87,11 @@ export const ChatProvider = ({ children }) => {
                 activeChatId,
                 createNewChat,
                 selectChat,
+                panelQuestions,
+                setPanelQuestions,
+                panelAnswers,
+                setPanelAnswers,
+                updatePanelAnswer,
             }}
         >
             {children}

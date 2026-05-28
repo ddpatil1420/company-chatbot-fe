@@ -1,24 +1,10 @@
-import { useEffect, useState } from "react";
+import { useChatContext } from "../../context/ChatContext";
 
 function QuestionPanel() {
-    const [questions, setQuestions] = useState([]);
-    const [answers, setAnswers] = useState({});
-
-    // simulate backend fetch
-    useEffect(() => {
-        // Replace this with API call
-        const fetchedQuestions = [
-            { id: 1, question: "What is your name?" },
-            { id: 2, question: "What is your email?" },
-            { id: 3, question: "Your experience?" },
-            { id: 4, question: "Favorite tech stack?" },
-        ];
-
-        setQuestions(fetchedQuestions);
-    }, []);
+    const { panelQuestions, panelAnswers, setPanelAnswers } = useChatContext();
 
     const handleChange = (id, value) => {
-        setAnswers((prev) => ({
+        setPanelAnswers((prev) => ({
             ...prev,
             [id]: value,
         }));
@@ -26,32 +12,38 @@ function QuestionPanel() {
 
     return (
         <aside className="w-80 border-l border-slate-200 dark:border-[#2a2a2a] bg-slate-50 dark:bg-[#1a1a1a] p-4 overflow-y-auto">
-
             <h2 className="text-sm font-semibold mb-4 text-slate-700 dark:text-gray-300">
-                Fill Details
+                Interview Milestones
             </h2>
 
             <div className="space-y-4">
-                {questions.map((q) => (
+                {panelQuestions.map((q) => (
                     <div key={q.id}>
-                        <label className="block text-xs mb-1 text-gray-600 dark:text-gray-400">
+                        <label className="block text-xs mb-1 text-gray-600 dark:text-gray-400 font-medium">
                             {q.question}
                         </label>
 
                         <input
                             type="text"
-                            value={answers[q.id] || ""}
+                            disabled
+                            value={panelAnswers[q.id] || ""}
                             onChange={(e) => handleChange(q.id, e.target.value)}
                             className="
-                w-full px-3 py-2
-                rounded-lg text-sm
-                bg-white dark:bg-[#2a2a2a]
-                border border-slate-300 dark:border-[#3a3a3a]
-                focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-500
-              "
+                                w-full px-3 py-2
+                                rounded-lg text-sm
+                                bg-gray-100 dark:bg-[#202020] text-gray-500
+                                border border-slate-200 dark:border-[#3a3a3a]
+                                focus:outline-none
+                            "
                         />
                     </div>
                 ))}
+
+                {panelQuestions.length === 0 && (
+                    <p className="text-xs text-gray-400 italic text-center pt-8">
+                        Send "Hi" to begin the screening evaluation form.
+                    </p>
+                )}
             </div>
         </aside>
     );

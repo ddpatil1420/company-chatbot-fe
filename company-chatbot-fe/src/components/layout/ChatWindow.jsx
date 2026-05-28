@@ -8,7 +8,8 @@ function ChatWindow() {
     const [loading, setLoading] = useState(false);
     const [darkMode] = useState(true);
     const [sessionId, setSessionId] = useState(null);
-    const { addChat, activeChatId, chatHistory } = useChatContext();
+    const { addChat, activeChatId, chatHistory, setPanelQuestions, updatePanelAnswer } = useChatContext();
+    const [currentQuestionInFlight, setCurrentQuestionInFlight] = useState("");
     const activeChat = chatHistory.find((chat) => chat.id === activeChatId);
 
     useEffect(() => {
@@ -32,29 +33,38 @@ function ChatWindow() {
 
         try {
             setLoading(true);
-
             if (isFirstMessage) {
                 const data = await initChatSession("fullstack_developer");
-
                 setSessionId(data.session_id);
-
+                if (data.all_questions) {
+                    const formattedForPanel = data.all_questions.map((qText, index) => ({
+                        id: index + 1,
+                        question: qText
+                    }));
+                    setPanelQuestions(formattedForPanel);
+                }
                 addChat(message, data.question);
                 setResponse(data.question);
+                setCurrentQuestionInFlight(data.question);
             } else {
+                const questionBeingAnswered = currentQuestionInFlight;
                 const data = await sendMessage(message, sessionId);
 
-                if (Array.isArray(data.response)) {
-                    const policyAnswer = data.response[0];
-                    const interviewQuestion = data.response[1];
+                if (!data.is_policy && questionBeingAnswered) {
+                    updatePanelAnswer(questionBeingAnswered, message);
+                }
 
-                    addChat(message, policyAnswer);
-                    if (interviewQuestion) {
-                        addChat(undefined, interviewQuestion);
+                if (Array.isArray(data.response)) {
+                    addChat(message, data.response[0]);
+                    if (data.response[1]) {
+                        addChat("", data.response[1]);
+                        setCurrentQuestionInFlight(data.response[1]);
                     }
-                    setResponse(interviewQuestion);
+                    setResponse(data.response[1]);
                 } else {
                     addChat(message, data.response);
                     setResponse(data.response);
+                    setCurrentQuestionInFlight(data.response);
                 }
             }
             setMessage("");
