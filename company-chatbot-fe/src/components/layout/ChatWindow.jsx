@@ -24,50 +24,81 @@ function ChatWindow() {
         }
     }, [activeChatId]);
 
+    const formatBotResponse = (resPayload) => {
+        if (Array.isArray(resPayload)) {
+            return resPayload[0] ? String(resPayload[0]).trim() : "";
+        }
+        return resPayload ? String(resPayload).trim() : "";
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!message.trim() || loading) return;
 
         const isFirstMessage = !activeMessages || activeMessages.length === 0;
+        const userSubmittedText = message;
+        setMessage("");
 
         try {
             setLoading(true);
             if (isFirstMessage) {
                 const data = await initChatSession("fullstack_developer");
                 setSessionId(data.session_id);
+
+                let firstQuestionStr = "";
+
                 if (data.all_questions) {
-                    const formattedForPanel = data.all_questions.map((qText, index) => ({
-                        id: index + 1,
-                        question: qText
-                    }));
+                    const formattedForPanel = data.all_questions.map((item, index) => {
+                        const qText = typeof item === 'object' && item !== null ? item.question : item;
+                        return {
+                            id: index + 1,
+                            question: String(qText)
+                        };
+                    });
                     setPanelQuestions(formattedForPanel);
                 }
-                addChat(message, data.question);
-                setResponse(data.question);
-                setCurrentQuestionInFlight(data.question);
+
+                if (data.question) {
+                    firstQuestionStr = typeof data.question === 'object' && data.question !== null
+                        ? String(data.question.question)
+                        : String(data.question);
+                }
+
+                addChat(userSubmittedText, firstQuestionStr.trim());
+                setResponse(firstQuestionStr.trim());
+                setCurrentQuestionInFlight(firstQuestionStr.trim());
+
             } else {
                 const questionBeingAnswered = currentQuestionInFlight;
-                const data = await sendMessage(message, sessionId);
+
+                const data = await sendMessage(userSubmittedText, sessionId);
 
                 if (!data.is_policy && questionBeingAnswered) {
-                    updatePanelAnswer(questionBeingAnswered, message);
+                    updatePanelAnswer(questionBeingAnswered, userSubmittedText);
                 }
 
                 if (Array.isArray(data.response)) {
-                    addChat(message, data.response[0]);
-                    if (data.response[1]) {
-                        addChat("", data.response[1]);
-                        setCurrentQuestionInFlight(data.response[1]);
+                    if (data.response[0]) {
+                        addChat(userSubmittedText, String(data.response[0]).trim());
                     }
-                    setResponse(data.response[1]);
+
+                    if (data.response[1]) {
+                        const nextQ = String(data.response[1]).trim();
+                        addChat("", nextQ);
+                        setCurrentQuestionInFlight(nextQ);
+                        setResponse(nextQ);
+                    } else {
+                        setResponse(String(data.response[0]).trim());
+                    }
                 } else {
-                    addChat(message, data.response);
-                    setResponse(data.response);
-                    setCurrentQuestionInFlight(data.response);
+                    const singleResponseStr = String(data.response).trim();
+
+                    addChat(userSubmittedText, singleResponseStr);
+                    setResponse(singleResponseStr);
+                    setCurrentQuestionInFlight(singleResponseStr);
                 }
             }
-            setMessage("");
         } catch (error) {
             console.error("Chat Error:", error);
             setResponse("Something went wrong. Please try again.");
